@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>They Are Coming - Zombie Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff00;
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            display: none;
+            z-index: 20;
+        }
+
+        #gameOver h1 {
+            color: #ff0000;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #00d4ff;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 15;
+        }
+
+        .back-btn:hover {
+            background: #0099ff;
+        }
+
+        #restart {
+            background: #00ff00;
+            color: #000;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        #restart:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div>Wave: <span id="wave">1</span></div>
+        <div>Health: <span id="health">100</span>%</div>
+        <div>Kills: <span id="kills">0</span></div>
+    </div>
+    <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
+    <div id="gameOver">
+        <h1>GAME OVER!</h1>
+        <p>Wave Reached: <span id="waveReached">1</span></p>
+        <p>Kills: <span id="finalKills">0</span></p>
+        <button id="restart">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Player {
+            constructor() {
+                this.x = canvas.width / 2;
+                this.y = canvas.height - 50;
+                this.width = 30;
+                this.height = 40;
+                this.speed = 6;
+            }
+
+            update(keys) {
+                if (keys['ArrowLeft'] || keys['a']) this.x -= this.speed;
+                if (keys['ArrowRight'] || keys['d']) this.x += this.speed;
+
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+            }
+
+            draw() {
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#00cc00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Zombie {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -30;
+                this.width = 25;
+                this.height = 35;
+                this.speed = 2 + Math.random();
+                this.health = 1;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = '#00aa00';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 5;
+                this.height = 15;
+                this.speed = 8;
+            }
+
+            update() {
+                this.y -= this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        const player = new Player();
+        let zombies = [];
+        let bullets = [];
+        let health = 100;
+        let wave = 1;
+        let kills = 0;
+        let gameRunning = true;
+        let waveZombiesSpawned = 0;
+        let maxZombiesPerWave = 5;
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') {
+                bullets.push(new Bullet(player.x + player.width / 2 - 2.5, player.y));
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function gameLoop() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameRunning) {
+                player.update(keys);
+                player.draw();
+
+                // Spawn zombies
+                if (waveZombiesSpawned < maxZombiesPerWave + wave * 2) {
+                    if (Math.random() < 0.02) {
+                        zombies.push(new Zombie());
+                        waveZombiesSpawned++;
+                    }
+                }
+
+                // Update and draw zombies
+                for (let i = zombies.length - 1; i >= 0; i--) {
+                    zombies[i].update();
+                    zombies[i].draw();
+
+                    // Check if zombie reached player
+                    if (checkCollision(player, zombies[i])) {
+                        health -= 10;
+                        zombies.splice(i, 1);
+                    } else if (zombies[i].y > canvas.height) {
+                        health -= 5;
+                        zombies.splice(i, 1);
+                    }
+                }
+
+                // Update and draw bullets
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    bullets[i].update();
+                    bullets[i].draw();
+
+                    if (bullets[i].y < 0) {
+                        bullets.splice(i, 1);
+                        continue;
+                    }
+
+                    // Check bullet-zombie collision
+                    for (let j = zombies.length - 1; j >= 0; j--) {
+                        if (checkCollision(bullets[i], zombies[j])) {
+                            bullets.splice(i, 1);
+                            zombies.splice(j, 1);
+                            kills++;
+                            break;
+                        }
+                    }
+                }
+
+                // Check if wave is complete
+                if (waveZombiesSpawned >= maxZombiesPerWave + wave * 2 && zombies.length === 0) {
+                    wave++;
+                    waveZombiesSpawned = 0;
+                }
+
+                if (health <= 0) {
+                    gameRunning = false;
+                    document.getElementById('gameOver').style.display = 'block';
+                    document.getElementById('waveReached').textContent = wave;
+                    document.getElementById('finalKills').textContent = kills;
+                }
+
+                document.getElementById('wave').textContent = wave;
+                document.getElementById('health').textContent = health;
+                document.getElementById('kills').textContent = kills;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('restart').addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        gameLoop();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
