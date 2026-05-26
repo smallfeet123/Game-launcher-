@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OvO - Platformer Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00d4ff;
+            font-size: 20px;
+            z-index: 10;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            display: none;
+            z-index: 20;
+        }
+
+        #gameOver h1 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #00d4ff;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 15;
+        }
+
+        .back-btn:hover {
+            background: #0099ff;
+        }
+
+        #restart {
+            background: #00ff00;
+            color: #000;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        #restart:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div>Level: <span id="level">1</span></div>
+    </div>
+    <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
+    <div id="gameOver">
+        <h1>LEVEL COMPLETE!</h1>
+        <p>You reached the goal!</p>
+        <button id="restart">Next Level</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Player {
+            constructor() {
+                this.x = 50;
+                this.y = canvas.height - 100;
+                this.width = 25;
+                this.height = 25;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.speed = 5;
+                this.jumpPower = 12;
+                this.isJumping = false;
+            }
+
+            update(keys) {
+                if (keys['ArrowLeft'] || keys['a']) this.velocityX = -this.speed;
+                else if (keys['ArrowRight'] || keys['d']) this.velocityX = this.speed;
+                else this.velocityX *= 0.9;
+
+                this.velocityY += 0.6; // Gravity
+
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+
+                // Ground collision
+                if (this.y + this.height >= canvas.height - 20) {
+                    this.y = canvas.height - 20 - this.height;
+                    this.velocityY = 0;
+                    this.isJumping = false;
+                }
+            }
+
+            jump() {
+                if (!this.isJumping) {
+                    this.velocityY = -this.jumpPower;
+                    this.isJumping = true;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#00d4ff';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#0099ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Platform {
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+
+            draw() {
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class Goal {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 40;
+                this.height = 40;
+            }
+
+            draw() {
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#FFA500';
+                ctx.font = '20px Arial';
+                ctx.fillText('★', this.x + 10, this.y + 28);
+            }
+        }
+
+        const player = new Player();
+        const goal = new Goal(canvas.width - 100, canvas.height - 150);
+        let platforms = [
+            new Platform(0, canvas.height - 20, canvas.width, 20),
+            new Platform(200, canvas.height - 120, 150, 20),
+            new Platform(500, canvas.height - 200, 150, 20),
+            new Platform(800, canvas.height - 280, 150, 20),
+            new Platform(1100, canvas.height - 200, 150, 20),
+        ];
+
+        let gameRunning = true;
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') {
+                player.jump();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function checkCollision(player, platform) {
+            return player.x < platform.x + platform.width &&
+                   player.x + player.width > platform.x &&
+                   player.y + player.height >= platform.y &&
+                   player.y + player.height <= platform.y + platform.height + 10 &&
+                   player.velocityY >= 0;
+        }
+
+        function checkGoalCollision() {
+            return player.x < goal.x + goal.width &&
+                   player.x + player.width > goal.x &&
+                   player.y < goal.y + goal.height &&
+                   player.y + player.height > goal.y;
+        }
+
+        function gameLoop() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameRunning) {
+                player.update(keys);
+
+                for (let platform of platforms) {
+                    if (checkCollision(player, platform)) {
+                        player.velocityY = 0;
+                        player.y = platform.y - player.height;
+                        player.isJumping = false;
+                    }
+                }
+
+                if (checkGoalCollision()) {
+                    gameRunning = false;
+                    document.getElementById('gameOver').style.display = 'block';
+                }
+
+                if (player.y > canvas.height) {
+                    player.y = canvas.height - 100;
+                    player.velocityY = 0;
+                }
+
+                for (let platform of platforms) {
+                    platform.draw();
+                }
+
+                goal.draw();
+                player.draw();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('restart').addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        gameLoop();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
