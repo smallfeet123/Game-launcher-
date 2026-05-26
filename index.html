@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Launcher - Play Now!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #00d4ff;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .game-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .game-card p {
+            font-size: 0.95rem;
+            color: #ccc;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .play-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #00d4ff, #0099ff);
+            color: #000;
+            padding: 12px 35px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .play-btn:active {
+            transform: scale(0.98);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .game-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 GAME LAUNCHER</h1>
+            <p class="subtitle">Choose a game and start playing now!</p>
+        </header>
+
+        <div class="games-grid">
+            <!-- Slope Game -->
+            <div class="game-card">
+                <div class="game-icon">⛷️</div>
+                <h2>Slope</h2>
+                <p>Roll down endless slopes in this thrilling racing game. Avoid obstacles and reach the highest score!</p>
+                <a href="https://slope.run/" target="_blank" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- They Are Coming Game -->
+            <div class="game-card">
+                <div class="game-icon">👾</div>
+                <h2>They Are Coming</h2>
+                <p>Defend your territory against waves of enemies. Build defenses and survive the incoming attacks!</p>
+                <a href="https://www.crazygames.com/game/they-are-coming" target="_blank" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- OvO Game -->
+            <div class="game-card">
+                <div class="game-icon">🐧</div>
+                <h2>OvO</h2>
+                <p>A fun platformer game featuring adorable characters. Jump, slide, and complete challenging levels!</p>
+                <a href="https://www.crazygames.com/game/ovo" target="_blank" class="play-btn">Play Now</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Game Launcher. All rights reserved. Have fun playing!</p>
+        </footer>
+    </div>
+</body>
+</html>
